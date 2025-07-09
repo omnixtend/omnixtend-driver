@@ -1,12 +1,26 @@
 # OmniXtend Driver - Host Node Implementation
 
-A comprehensive implementation of OmniXtend protocol support for Chipyard-based systems, providing 10G and 100G Ethernet connectivity with TileLink over Ethernet (TLoE) capabilities.
+<div align="center">
+  <img src="images/omnixtend-logo.png" alt="OmniXtend Logo" width="300">
+</div>
 
-![BlockDiagram](docs/images/OmniXtend_over_Ethernet_Block_Diagram.png)
+A comprehensive implementation of OmniXtend protocol support for Chipyard-based systems, providing 10G and 100G Ethernet connectivity with TileLink over Ethernet (TLoE) capabilities.
 
 ## Overview
 
-This project implements OmniXtend protocol support across multiple FPGA platforms, enabling high-performance communication between Rocket Chip-based systems and external endpoints via Ethernet. The implementation supports both 10G and 100G Ethernet interfaces with comprehensive packet processing capabilities.
+This project implements OmniXtend protocol support across multiple FPGA platforms, enabling high-performance communication between Rocket Chip-based systems and external endpoints via Ethernet. The implementation supports both 10G and 100G Ethernet interfaces with comprehensive packet processing capabilities, designed for FPGA and ASIC implementations.
+
+## Features
+
+- **OmniXtend Protocol Support**: Full implementation of OmniXtend specification
+- **Multi-Platform Support**: Arty A7-100T, VCU118 10G, and VCU118 100G platforms
+- **TileLink over Ethernet**: Seamless TileLink to Ethernet packet conversion
+- **High Performance**: Optimized for 10G and 100G Ethernet interfaces
+- **Flow Control**: Credit-based flow control with sequence number tracking
+- **Connection Management**: Automatic connection establishment and maintenance
+- **Real-time Monitoring**: Comprehensive debugging and performance monitoring
+- **Modular Design**: Clean separation of concerns across components
+- **Platform Abstraction**: Consistent interface across different FPGA targets
 
 ## Supported Platforms
 
@@ -37,167 +51,69 @@ This project implements OmniXtend protocol support across multiple FPGA platform
   - Comprehensive latency measurement
   - Enhanced debugging and monitoring capabilities
 
+## Project Structure
+
+```
+├── arty100t/                       # Arty A7-100T platform implementation
+├── VCU118-10G/                     # VCU118 10G platform implementation
+├── VCU118-100G/                    # VCU118 100G platform implementation
+├── images/                         # Project images and logos
+└── LICENSE                         # License information
+```
+
+### Platform-Specific Structure
+
+Each platform directory contains:
+
+```
+platform/
+├── chipyard/                       # Chipyard project files
+│   ├── src/main/scala/
+│   │   ├── ethernet_subsystem/     # Ethernet IP integration
+│   │   │   ├── xxv_ethernet.scala  # 10G Ethernet implementation
+│   │   │   └── cmac_ethernet.scala # 100G Ethernet implementation
+│   │   ├── UltraScaleShell.scala   # UltraScale+ shell implementation
+│   │   ├── Ethernet.scala          # Ethernet overlay definitions
+│   │   ├── TestHarness.scala       # Top-level test harness
+│   │   ├── OX.scala                # Core OmniXtend node
+│   │   ├── PacketTransceiver.scala # Packet conversion engine
+│   │   ├── PacketGenerator.scala   # Performance testing module
+│   │   ├── EndPoint.scala          # Memory endpoint simulation
+│   │   ├── HarnessBinders.scala    # Harness-level connections
+│   │   ├── IOBinders.scala         # IO-level connections
+│   │   ├── Configs.scala           # Configuration management
+│   │   ├── Ports.scala             # System port definitions
+│   │   └── System.scala            # Updated ChipyardSystem
+│   └── build.sbt                   # Build configuration
+└── Makefile                        # Platform-specific build targets
+```
+
 ## Architecture
 
-### 1.1 Rocket Core Integration
+### Rocket Core Integration
 The **Rocket Core** serves as the primary processor and interfaces with external components through multiple bus interfaces:
 - **SystemBus**: Main system interconnect
 - **MemoryBus**: Memory access interface  
 - **FrontBus**: Front-end peripheral interface
 - **PeripheryBus**: Peripheral device interface
 
-### 1.2 Ethernet Subsystem
+### Ethernet Subsystem
 The **Ethernet Subsystem** handles high-speed data transmission and reception with external endpoints, comprising:
 - **OmniXtend Module**: Core protocol implementation
 - **Packet Generator**: Test packet generation for performance evaluation
 - **Packet Transceiver**: TileLink to Ethernet packet conversion
 - **Ethernet IP**: Xilinx Ethernet Subsystem IP integration
 
-## Code Structure
+## Building
 
-### 2.1 Ethernet Subsystem Implementation
+### Prerequisites
 
-#### 2.1.1 xxv_ethernet.scala / cmac_ethernet.scala
-Core Ethernet IP integration files that connect the Ethernet Subsystem IP with the OmniXtend module.
+- Vivado Design Suite (2021.2 or later)
+- Chipyard framework
+- Scala 2.12 or later
+- SBT (Scala Build Tool)
 
-**Key Components:**
-- `HasXXVEthernetPads`: Physical interface declarations
-- `HasXXVEthernetMAC`: MAC layer interface
-- `HasXXVEthernetClocks`: Clock domain management
-- `HasXXVEthernetAXI4Lite`: AXI-Lite control interface
-
-**Integration Features:**
-- `XXVEthernetBlackBox`: Vivado TCL script-based IP generation
-- `AXI4StreamFIFO`: Clock domain crossing between OmniXtend and Ethernet IP
-- `DiplomaticXXVEthernet`: Diplomatic node creation for AXI-Lite bus
-- `XXVEthernet`: Complete integration module with OmniXtendNode
-
-#### 2.1.2 UltraScaleShell.scala
-Shell implementation for UltraScale+ FPGAs enabling Ethernet Subsystem IP instantiation in the test harness.
-
-**Key Features:**
-- `EthernetUltraScalePlacedOverlay`: Overlay for Ethernet IP placement
-- GPIO button input support for runtime control
-- Proper node connection management between XXVEthernet and OmniXtendNode
-
-#### 2.1.3 Ethernet.scala
-Defines the Ethernet overlay output types and GPIO interface.
-
-**Interface Definitions:**
-- `EthernetPlacedOverlayOutput`: Type definitions for AXI and TileLink nodes
-- `EthernetPads`: Physical interface with additional GPIO controls
-
-#### 2.1.4 TestHarness.scala
-Top-level file generation for Vivado projects.
-
-**Key Components:**
-- `refClkNode`: Reference clock generation for Ethernet IP
-- `ethNode` and `oxNode`: AXI-Lite and TileLink node instantiation
-- `ethClient` and `oxClient`: Data bus connections from Rocket Core
-
-### 2.2 OmniXtend Protocol Implementation
-
-#### 2.2.1 OX.scala
-Core OmniXtend node implementation providing TileLink manager functionality.
-
-**Key Features:**
-- `OmniXtendNode`: LazyModule implementing TileLink manager
-- `OmniXtendBundle`: IO interface for Ethernet packet transmission
-- Support for Get and PutFullData TileLink operations
-- Direct integration with PacketTransceiver for packet conversion
-
-**Platform-Specific Enhancements:**
-- **VCU118-100G**: Includes PacketGenerator for performance testing
-- **Arty100T**: Simplified implementation for resource-constrained FPGA
-
-#### 2.2.2 PacketTransceiver.scala
-Core packet conversion engine that transforms TileLink signals into Ethernet packets.
-
-**Key Capabilities:**
-- **TX Path**: TileLink to AXI-Stream conversion with Ethernet headers
-- **RX Path**: AXI-Stream to TileLink conversion with response generation
-- **Connection Management**: OmniXtend connection establishment and maintenance
-- **Queue Management**: FIFO-based packet buffering and flow control
-
-**Advanced Features:**
-- Sequence number tracking and acknowledgment handling
-- Credit-based flow control implementation
-- Support for variable packet sizes (1-8 bytes)
-- Comprehensive state machine for packet processing
-
-#### 2.2.3 PacketGenerator.scala (VCU118-100G)
-Advanced packet generation module for performance testing and validation.
-
-**Testing Capabilities:**
-- Throughput measurement with configurable packet counts
-- Latency testing with precise timing measurement
-- Real-time performance monitoring via VIO interface
-- Automatic test pattern generation
-
-#### 2.2.4 EndPoint.scala
-Memory endpoint simulation providing read/write operations for testing.
-
-**Memory Interface:**
-- 1MB synchronous memory for data storage
-- Address offset mapping (0x100000000)
-- Queue-based serialization/deserialization
-- Support for TileLink read and write operations
-
-### 2.3 System Integration
-
-#### 2.3.1 HarnessBinders.scala
-Defines harness-level signal connections between ChipTop and TestHarness.
-
-**Key Binders:**
-- `WithEthernetAXI4Lite`: AXI-Lite bus connection for Ethernet control
-- `WithOXTilelink`: TileLink bus connection for OmniXtend operations
-- `WithREGTilelink`: Additional TileLink bus for register access (VCU118-100G)
-
-#### 2.3.2 IOBinders.scala
-Defines IO-level signal connections between DigitalTop and ChipTop.
-
-**Key Binders:**
-- `WithAXIIOPassthrough`: AXI-Lite IO passthrough for system integration
-- `WithOXIOPassthrough`: TileLink IO passthrough for OmniXtend interface
-
-#### 2.3.3 Configs.scala
-Configuration management for memory regions and system parameters.
-
-**Memory Regions:**
-- `ExtBus`: Ethernet AXI-Lite (0x6000_0000–0x6001_0000)
-- `ExtBus2`: Memory TileLink (0x2_0000_0000–0x2_1000_0000)
-- `ExtBus3`: OX TileLink (0x1_0000_0000–0x2_0000_0000)
-
-#### 2.3.4 Ports.scala
-System port definitions with memory region parameterization.
-
-#### 2.3.5 System.scala
-Updated ChipyardSystem with OmniXtend support and TileLink master port capabilities.
-
-### 2.4 Package Dependencies
-
-#### 2.4.1 build.sbt
-Dependency management for all project components.
-
-**Key Dependencies:**
-- `OXHost`: Core OmniXtend implementation
-- `fpga_shells`: FPGA platform-specific shells
-- `rocketchip`: Rocket Chip core components
-- Platform-specific dependencies for each target
-
-**Dependency Structure:**
-```
-chipyard
-├── dependsOn(OXHost, fpga_shells, ...)
-fpga_shells  
-├── dependsOn(OXHost, rocketchip, ...)
-OXHost
-├── dependsOn(rocketchip, rocketchip_blocks)
-```
-
-## Usage
-
-### Building for Different Platforms
+### Compilation
 
 #### Arty A7-100T
 ```bash
@@ -217,42 +133,147 @@ cd VCU118-100G/chipyard
 make CONFIG=OXRocketConfig
 ```
 
-### Testing and Validation
+### Build Targets
 
-#### Throughput Testing
+- `CONFIG=OXRocketConfig`: Standard OmniXtend Rocket configuration
+- `CONFIG=OXRocketConfig DEBUG=1`: Build with debug information
+- `CONFIG=OXRocketConfig VERBOSE=1`: Build with verbose output
+
+## Usage
+
+### Hardware Generation
+
+The implementation generates synthesizable Verilog code for each platform:
+
+```scala
+// Generate OmniXtend endpoint
+val oxNode = LazyModule(new OmniXtendNode(params))
+```
+
+### Configuration Parameters
+
+```scala
+case class OmniXtendParams(
+  dataWidth: Int = 64,
+  addrWidth: Int = 32,
+  maxOutstanding: Int = 8,
+  windowSize: Int = 16,
+  timeoutCycles: Int = 1000
+)
+```
+
+### Interface Signals
+
+The OmniXtend driver provides the following interfaces:
+
+- **TileLink Interface**: Standard TileLink A/B/C/D/E channels
+- **Ethernet Interface**: MAC layer interface for network communication
+- **Control Interface**: Configuration and status signals
+- **Memory Interface**: Direct memory access for high-performance operations
+
+## Protocol Details
+
+### Frame Structure
+
+TLOE frames include:
+- Header with sequence numbers, acknowledgments, and channel information
+- Payload data
+- Flow control credits
+
+### Channel Types
+
+- Channel 0: Control messages
+- Channel A: TileLink requests
+- Channel B: TileLink responses  
+- Channel C: TileLink data
+- Channel D: TileLink acknowledgments
+- Channel E: Reserved
+
+### Flow Control
+
+Credit-based flow control prevents buffer overflow:
+- Credits are exchanged during connection establishment
+- Credits are consumed when sending messages
+- Credits are replenished when receiving acknowledgments
+
+## Testing and Validation
+
+### Throughput Testing
 - Use PacketGenerator in test mode for automated throughput measurement
 - Monitor performance via VIO interface in Vivado Hardware Manager
 - Analyze packet statistics and timing information
 
-#### Latency Testing
+### Latency Testing
 - Utilize LatencyGen module for precise latency measurement
 - Measure round-trip time for TileLink operations
 - Validate protocol compliance and performance
 
-#### Memory Operations
+### Memory Operations
 - Use `devmem` commands to read/write memory via TileLink interface
 - Verify data integrity across Ethernet transmission
 - Test various packet sizes and transfer patterns
 
-## Key Features
+## Performance Characteristics
 
-### Protocol Support
-- **OmniXtend Protocol**: Full implementation of OmniXtend specification
-- **TileLink over Ethernet**: Seamless TileLink to Ethernet packet conversion
-- **Flow Control**: Credit-based flow control with sequence number tracking
-- **Connection Management**: Automatic connection establishment and maintenance
+### Throughput Performance
+- **10G Platform**: Up to 10 Gbps sustained throughput
+- **100G Platform**: Up to 100 Gbps sustained throughput
+- **Arty Platform**: Up to 1 Gbps sustained throughput
 
-### Performance Features
-- **High Throughput**: Optimized for 10G and 100G Ethernet interfaces
-- **Low Latency**: Efficient packet processing with minimal overhead
-- **Scalable Architecture**: Modular design supporting multiple platforms
-- **Real-time Monitoring**: Comprehensive debugging and performance monitoring
+### Latency Performance
+- **Sub-microsecond**: Packet processing latency
+- **Low overhead**: Minimal protocol overhead
+- **Deterministic**: Predictable timing characteristics
 
-### Development Features
-- **Modular Design**: Clean separation of concerns across components
-- **Platform Abstraction**: Consistent interface across different FPGA targets
-- **Extensible Architecture**: Easy addition of new platforms and features
-- **Comprehensive Testing**: Built-in testing and validation capabilities
+### Reliability Features
+- **Error detection**: Hardware-level error detection
+- **Automatic retransmission**: Reliable packet delivery
+- **Flow control**: Prevents buffer overflow
+
+## Development
+
+### Code Style
+
+- Chisel 3.x coding standards
+- Consistent naming conventions
+- Comprehensive parameterization
+- Modular design for reusability
+
+### Testing
+
+```bash
+# Run unit tests
+sbt test
+
+# Run specific test
+sbt "testOnly omnixtend.OmniXtendTest"
+
+# Generate test waveforms
+sbt "testOnly omnixtend.OmniXtendTest -- -DwriteVcd=1"
+```
+
+### Simulation
+
+```bash
+# Run simulation
+sbt "runMain omnixtend.OmniXtendSimulator"
+
+# Generate waveforms
+sbt "runMain omnixtend.OmniXtendSimulator -- -DwriteVcd=1"
+```
+
+## Deployment
+
+### FPGA Implementation
+
+The generated Verilog can be synthesized for the following FPGA platforms:
+
+- **Xilinx Artix-7**: Arty A7-100T development board
+- **Xilinx Virtex UltraScale+**: VCU118 development board (10G and 100G variants)
+
+### ASIC Implementation
+
+The design is suitable for ASIC implementation with standard cell libraries.
 
 ## Contributing
 
@@ -266,3 +287,19 @@ This project follows the Chipyard development model with modular components and 
 ## License
 
 This project is part of the Chipyard ecosystem and follows the same licensing terms as the main Chipyard repository.
+
+## Acknowledgments
+
+- Based on the OmniXtend protocol specification
+- Implements TileLink over Ethernet communication in hardware
+- Designed for high-performance, reliable network communication
+- Built with Chisel hardware construction language
+- Integrated with Chipyard framework
+
+---
+
+<div align="center">
+  <img src="images/ETRI_CI_01.png" alt="ETRI Logo" width="200">
+  <br><br>
+  <strong>This project is developed and maintained by <a href="https://www.etri.re.kr/">ETRI (Electronics and Telecommunications Research Institute)</a></strong>
+</div>
