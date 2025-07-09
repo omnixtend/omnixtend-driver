@@ -57,11 +57,15 @@ class OXRocketVCU118Config extends Config(
   new chipyard.OXRocketConfig)
 // DOC include end: AbstractVCU118 and Rocket
 
-
 class RocketArty100TConfig extends Config(
   new WithArty100TTweaks ++
   new chipyard.config.WithBroadcastManager ++ // no l2
   new chipyard.RocketConfig)
+
+class OXRocketArty100TConfig extends Config(
+  new WithArty100TTweaks ++
+  new chipyard.config.WithBroadcastManager ++ // no l2
+  new chipyard.OXRocketConfig)
 
 class NoCoresArty100TConfig extends Config(
   new WithArty100TTweaks ++
