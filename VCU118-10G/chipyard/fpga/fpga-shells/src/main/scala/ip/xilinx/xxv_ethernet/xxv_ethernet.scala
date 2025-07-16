@@ -352,7 +352,7 @@ class DiplomaticXXVEthernet(c: XXVEthernetParams)(implicit p:Parameters) extends
     blackbox.io.tx_reset_0                := io.clocks.sys_reset
     blackbox.io.gtwiz_reset_tx_datapath_0 := io.clocks.sys_reset
     blackbox.io.gtwiz_reset_rx_datapath_0 := io.clocks.sys_reset
-	  //New
+	//New
     blackbox.io.pm_tick_0 := false.B
     blackbox.io.tx_preamblein_0 := 0.U
     blackbox.io.ctl_tx_send_rfi_0 := false.B
@@ -415,6 +415,8 @@ class XXVEthernet(config: XXVEthernetParams)(implicit p: Parameters) extends Laz
     island.module.io.mac.tx_axis_tlast_0 := ox2ethfifo.io.m_axis_tlast
     island.module.io.mac.tx_axis_tkeep_0 := ox2ethfifo.io.m_axis_tkeep
 
+    ox2ethfifo.io.m_axis_tready := island.module.io.mac.tx_axis_tready_0
+
     ox2ethfifo.io.s_axis_aresetn := !Module.reset.asBool
     ox2ethfifo.io.s_axis_aclk := Module.clock
     ox2ethfifo.io.m_axis_aclk := island.module.io.clocks.tx_clk_out_0
@@ -450,8 +452,6 @@ class XXVEthernet(config: XXVEthernetParams)(implicit p: Parameters) extends Laz
     val debug2_vio = RegInit(false.B)
     val debug2_btn = RegInit(false.B)
     val vio_test_reg = RegInit(0.U(32.W))
-    val debug1 = RegInit(false.B)
-    val debug2 = RegInit(false.B)
     vio_reg0 := vio.io.probe_out0
     vio_reg1 := vio.io.probe_out1
     vio_reg2 := vio.io.probe_out2
